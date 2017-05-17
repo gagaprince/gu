@@ -3,27 +3,40 @@ var HClass=require('../base/HClass');
 var Promise = HClass.extend({
     isExe:false,
     callback:null,
+    callbackFail:null,
     nextPromise:null,
-    ctor:function(call,isLate){//isLate 是否要延后执行
+    ctor:function(call,callFailed,isLate){//isLate 是否要延后执行
         this.callback = call;
+        this.callbackFail = callFailed;
         if(!isLate){
             this.callback(this);
             this.isExe = true;
         }
     },
-    resolve:function(){
+    resolve:function(data){
         if(this.nextPromise){
-            this.nextPromise.excute();
+            this.nextPromise.excute(data);
         }
     },
-    excute:function(){
+    reject:function(data){
+        if(this.nextPromise){
+            this.nextPromise.excuteReject(data);
+        }
+    },
+    excuteReject:function(data){
         if(!this.isExe){
-            this.callback(this);
+            this.callbackFail(this,data);
             this.isExe = false;
         }
     },
-    then:function(newCall){
-        this.nextPromise = new Promise(newCall,true);
+    excute:function(data){
+        if(!this.isExe){
+            this.callback(this,data);
+            this.isExe = false;
+        }
+    },
+    then:function(newCall,newCallFailed){
+        this.nextPromise = new Promise(newCall,newCallFailed,true);
         return this.nextPromise;
     }
 });
